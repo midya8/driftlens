@@ -13,10 +13,10 @@ def run_demo():
     blocked = dict(confounded, blocks={'reference':['low']*8+['high']*2,
                                        'current':['low']*2+['high']*8})
     return {'mixture_pooled': compare(confounded),
-            'mixture_blocked': compare(blocked),
+            'mixture_blocked': compare(blocked, witness=2),
             'shift_bandwidth_family': compare_family({'reference': x, 'current': shifted}, [1., 2., 4.]),
             'same_generator': compare({'reference': x, 'current': y}, bandwidth=2),
-            'mean_shift': compare({'reference': x, 'current': shifted}, bandwidth=2),
+            'mean_shift': compare({'reference': x, 'current': shifted}, bandwidth=2, witness=3),
             'exact_tiny': compare({'reference': [[0], [.1]], 'current': [[3], [3.1]]}, exact=True),
             'fixture_scope': 'Seed13 selected development fixture: two 30x4 standard-normal '
                              'samples and the same current rows shifted by +2 per coordinate. '
