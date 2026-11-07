@@ -73,6 +73,36 @@ Limits: 500 pooled rows, 4096 dimensions, 10000 draws/allocations and
 20 million draw-by-pooled-row-squared work units. Exact mode rejects larger
 allocation spaces rather than pretending a subsample is exact.
 
+## Prespecified bandwidth families
+
+```bash
+python -m driftlens compare --input examples/embeddings.json --bandwidths 1 2 4
+```
+
+```python
+from driftlens import compare_family
+family = compare_family(payload, [1., 2., 4.], permutations=499, seed=13)
+```
+
+The fixed supplied family gets standard Holm step-down adjusted p-values,
+per-kernel `reject_within_family` and a family-level `reject_any`. Raw p-values
+stay visible; the competing uncorrected decision field is omitted. The same
+seed generates common label allocations across kernels. Arbitrary dependence
+among valid input p-values is allowed by Holm. It cannot repair invalid
+exchangeability, adaptively chosen bandwidths/preprocessing, omitted tests,
+repeated windows or optional stopping. Prespecify the entire tested family.
+This is family-wise error control, not a posterior error probability.
+
+For the selected shifted demo, bandwidths [1,2,4] each have raw p=0.002 and
+Holm p=0.006. A tiny exact example has raw p=1/3; testing two kernels at
+alpha=0.4 does not reject after Holm, despite both raw p-values passing.
+Families allow 1..20 distinct positive bandwidths. Work limits apply to the
+whole family, not each kernel separately; kernels are built once each and
+processed in sequence rather than all retained in memory.
+
+Source: [Holm formula and family-wise scope](https://pingouin-stats.org/generated/pingouin.multicomp.html).
+Standard correction, original small implementation.
+
 ## What this does not establish
 
 This is one two-sample upper-tail test. Null validity needs exchangeability
@@ -86,7 +116,7 @@ there is no always-valid monitoring guarantee here.
 
 ## Verification and attribution
 
-17 tests cover closed-form kernels, direct MMD arithmetic, negative estimates,
+25 tests cover closed-form kernels, direct MMD arithmetic, negative estimates,
 exact enumeration and rank superuniformity, ties, unequal groups, symmetry,
 seed/no-mutation behavior, +1 resolution, one cached kernel, extremes,
 work limits, CLI failures and pinned demo outputs. Tests run on Python
