@@ -17,7 +17,7 @@ def holm_adjust(p_values):
     return adjusted
 
 
-def compare_family(payload, bandwidths, permutations=499, seed=13, alpha=.05, exact=False):
+def compare_family(payload, bandwidths, permutations=499, seed=13, alpha=.05, exact=False, witness=0):
     """Run a fixed kernel family, reusing the seed for common label allocations.
 
     Correction covers this supplied family only. It cannot repair adaptive
@@ -35,7 +35,7 @@ def compare_family(payload, bandwidths, permutations=499, seed=13, alpha=.05, ex
     draws = allocation_count(groups) if exact else permutations
     if len(bandwidths) * draws * size * size > 20000000:
         raise ValueError('family exceeds 20000000 draw-by-pooled-row-squared work units')
-    reports = [compare(payload, b, permutations, seed, alpha, exact) for b in bandwidths]
+    reports = [compare(payload, b, permutations, seed, alpha, exact, witness) for b in bandwidths]
     adjusted = holm_adjust([r['p_value'] for r in reports])
     for report, p in zip(reports, adjusted):
         report['holm_p_value'] = p
