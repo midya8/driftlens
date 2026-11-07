@@ -138,3 +138,31 @@ Reference for within-group exchangeability:
 [Berkeley StatLab stratified permutation testing](https://statlab.github.io/permute/api/stratified.html).
 This implementation uses the same restriction principle with an MMD statistic,
 not their mean statistic or code.
+
+## Descriptive witness diagnostics
+
+```bash
+python -m driftlens compare --input examples/embeddings.json --bandwidth 1 --witness 3
+```
+
+API: `compare(payload, bandwidth=1., witness=3)`; family comparisons accept
+`witness` too. Zero (default) omits diagnostics; integers1..100 request that
+many highest-absolute-score rows per group, capped by available rows. Output
+contains only group-local zero-based row indices and scores, not vectors.
+Ties are broken by original row index. The existing pooled kernel is reused;
+no new kernel evaluations or changes to p-values/test statistics occur.
+
+At each observed row z, the unnormalized empirical witness is
+`mean_reference k(x,z) - mean_current k(y,z)`, including self kernels.
+Positive scores mean greater kernel similarity to reference; negative to
+current. Group means and their difference, `mmd2_biased`, are also reported.
+That biased squared MMD is distinct from the diagonal-excluding unbiased
+statistic used for permutation tests. No norm normalization is performed.
+
+This is descriptive in-sample localization, not row-level p-values, an anomaly
+verdict, a density, feature attribution or a cause. Self kernels, sample
+imbalance and bandwidth affect scores. With blocks supplied, the witness
+still uses pooled means; it is not block-adjusted or a conditional-effect
+explanation. Choosing rows after seeing these scores needs separate validation.
+
+Source: [Gretton et al., Section2.3, empirical witness](https://www.jmlr.org/papers/volume13/gretton12a/gretton12a.pdf).
