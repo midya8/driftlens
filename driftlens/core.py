@@ -2,6 +2,7 @@
 import math
 import random
 from .allocations import partition, allocation_count, allocations
+from .scoring import CachedScorer
 
 
 def _validate(x, y, bandwidth):
@@ -76,13 +77,14 @@ def compare(payload, bandwidth=1., permutations=499, seed=13, alpha=.05, exact=F
     if draws * size * size > 20000000:
         raise ValueError('permutation work exceeds 20000000 pooled-row squares')
     matrix = kernel_matrix(x, y, bandwidth)
-    observed = statistic(matrix, list(range(n)), list(range(n, size)))
+    scorer = CachedScorer(matrix, n)
+    observed = scorer.score(list(range(n)), list(range(n, size)))
     indices = list(range(size)); rng = random.Random(seed)
     exceedances = 0
     for chosen in allocations(groups, exact, permutations, rng):
         left = sorted(chosen); members = set(left)
         right = [i for i in indices if i not in members]
-        value = statistic(matrix, left, right)
+        value = scorer.score(left, right)
         # Conservative inclusion of floating near-ties, fixed before seeing data.
         exceedances += value >= observed - 1e-12
     p = exceedances / total if exact else (exceedances + 1) / (permutations + 1)
@@ -92,6 +94,10 @@ def compare(payload, bandwidth=1., permutations=499, seed=13, alpha=.05, exact=F
             'draws': draws, 'exceedances': exceedances, 'seed': seed,
             'p_resolution': 1 / total if exact else 1 / (permutations + 1),
             'kernel_evaluations': size * (size - 1) // 2,
+            'scoring_mode': 'complement_sums' if scorer.use_complement else 'direct',
+            'kernel_pair_reads_per_allocation': scorer.pair_reads,
+            'cached_row_sum_reads_per_allocation': scorer.small if scorer.use_complement else 0,
+            'scoring_setup_off_diagonal_reads': size*(size-1) if scorer.use_complement else 0,
             'total_label_allocations': total,
             'permutation_scheme': 'within_blocks' if blocked else 'pooled',
             'blocks': [{'size': len(group), 'reference_n': count, 'current_n': len(group)-count,
