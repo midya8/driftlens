@@ -57,7 +57,9 @@ def statistic(matrix, left, right):
     return 2 * a / (n * (n - 1)) + 2 * b / (m * (m - 1)) - 2 * c / (n * m)
 
 
-def compare(payload, bandwidth=1., permutations=499, seed=13, alpha=.05, exact=False):
+def compare(payload, bandwidth=1., permutations=499, seed=13, alpha=.05, exact=False, witness=0):
+    if type(witness) is not int or not 0 <= witness <= 100:
+        raise ValueError("witness must be an integer from 0 to 100")
     groups, blocked = partition(payload)
     x, y = payload['reference'], payload['current']
     width = _validate(x, y, bandwidth)
@@ -84,7 +86,7 @@ def compare(payload, bandwidth=1., permutations=499, seed=13, alpha=.05, exact=F
         # Conservative inclusion of floating near-ties, fixed before seeing data.
         exceedances += value >= observed - 1e-12
     p = exceedances / total if exact else (exceedances + 1) / (permutations + 1)
-    return {'mmd2_unbiased': observed, 'p_value': p, 'reject_at_alpha': p <= alpha,
+    report = {'mmd2_unbiased': observed, 'p_value': p, 'reject_at_alpha': p <= alpha,
             'alpha': alpha, 'bandwidth': bandwidth, 'reference_n': n, 'current_n': m,
             'dimensions': width, 'mode': 'exact' if exact else 'monte_carlo',
             'draws': draws, 'exceedances': exceedances, 'seed': seed,
@@ -102,3 +104,8 @@ def compare(payload, bandwidth=1., permutations=499, seed=13, alpha=.05, exact=F
                      'continuous-monitoring guarantee. Do not interpret non-rejection as '
                      'equivalence. Repeated/multiple tests need an explicit error-control plan. '
                      'Near ties within 1e-12 count conservatively as exceedances.'}
+
+    if witness:
+        from .witness import witness_report
+        report["witness"] = witness_report(matrix, n, witness)
+    return report
