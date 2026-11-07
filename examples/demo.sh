@@ -11,6 +11,8 @@ assert r['exact_tiny']['p_value']==1/3
 assert r['shift_bandwidth_family']['reject_any']
 assert r['mixture_pooled']['p_value'] <= .05
 assert r['mixture_blocked']['p_value'] == 1.
+assert r['imbalanced_exact']['kernel_pair_reads_per_allocation'] == 1
+assert r['imbalanced_exact']['draws'] == 190
 assert all(test['holm_p_value'] >= test['p_value'] for test in r['shift_bandwidth_family']['tests'])
 try:
     assert r['same_generator']['p_value'] <= .05
