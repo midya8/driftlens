@@ -12,7 +12,9 @@ def run_demo():
     confounded = {'reference': [[0]]*8 + [[5]]*2, 'current': [[0]]*2 + [[5]]*8}
     blocked = dict(confounded, blocks={'reference':['low']*8+['high']*2,
                                        'current':['low']*2+['high']*8})
-    return {'mixture_pooled': compare(confounded),
+    return {'imbalanced_exact': compare({'reference': [[0],[.1]],
+                                         'current': [[i/10] for i in range(2,20)]}, exact=True),
+            'mixture_pooled': compare(confounded),
             'mixture_blocked': compare(blocked, witness=2),
             'shift_bandwidth_family': compare_family({'reference': x, 'current': shifted}, [1., 2., 4.]),
             'same_generator': compare({'reference': x, 'current': y}, bandwidth=2),
