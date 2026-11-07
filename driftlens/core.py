@@ -1,7 +1,7 @@
 """Original dependency-free implementation of standard RBF MMD permutation tests."""
-import itertools
 import math
 import random
+from .allocations import partition, allocation_count, allocations
 
 
 def _validate(x, y, bandwidth):
@@ -58,8 +58,7 @@ def statistic(matrix, left, right):
 
 
 def compare(payload, bandwidth=1., permutations=499, seed=13, alpha=.05, exact=False):
-    if not isinstance(payload, dict) or set(payload) != {'reference', 'current'}:
-        raise ValueError('input must have exactly reference and current row matrices')
+    groups, blocked = partition(payload)
     x, y = payload['reference'], payload['current']
     width = _validate(x, y, bandwidth)
     if type(permutations) is not int or not 1 <= permutations <= 10000:
@@ -68,7 +67,7 @@ def compare(payload, bandwidth=1., permutations=499, seed=13, alpha=.05, exact=F
         raise ValueError('seed must be integer and exact must be boolean')
     if type(alpha) not in (int, float) or not math.isfinite(alpha) or not 0 < alpha < 1:
         raise ValueError('alpha must be finite and strictly between zero and one')
-    n, m = len(x), len(y); size = n + m; total = math.comb(size, n)
+    n, m = len(x), len(y); size = n + m; total = allocation_count(groups)
     draws = total if exact else permutations
     if exact and total > 10000:
         raise ValueError('exact mode exceeds 10000 label allocations')
@@ -77,14 +76,8 @@ def compare(payload, bandwidth=1., permutations=499, seed=13, alpha=.05, exact=F
     matrix = kernel_matrix(x, y, bandwidth)
     observed = statistic(matrix, list(range(n)), list(range(n, size)))
     indices = list(range(size)); rng = random.Random(seed)
-    def allocations():
-        if exact:
-            yield from itertools.combinations(indices, n)
-        else:
-            for _ in range(permutations):
-                yield rng.sample(indices, n)
     exceedances = 0
-    for chosen in allocations():
+    for chosen in allocations(groups, exact, permutations, rng):
         left = sorted(chosen); members = set(left)
         right = [i for i in indices if i not in members]
         value = statistic(matrix, left, right)
@@ -98,8 +91,13 @@ def compare(payload, bandwidth=1., permutations=499, seed=13, alpha=.05, exact=F
             'p_resolution': 1 / total if exact else 1 / (permutations + 1),
             'kernel_evaluations': size * (size - 1) // 2,
             'total_label_allocations': total,
+            'permutation_scheme': 'within_blocks' if blocked else 'pooled',
+            'blocks': [{'size': len(group), 'reference_n': count, 'current_n': len(group)-count,
+                        'allocations': math.comb(len(group), count)} for group,count in groups] if blocked else [],
+            'informative_blocks': sum(0 < count < len(group) for group,count in groups) if blocked else None,
             'scope': 'One upper-tail two-sample permutation test. Requires exchangeability '
-                     'of group labels under the null and a prespecified or label-invariant '
+                     'of group labels under the null (within each prespecified block if supplied), '
+                     'joint invariance under allowed permutations, and prespecified or label-invariant '
                      'bandwidth/preprocessing. No cause, model-quality, practical-effect or '
                      'continuous-monitoring guarantee. Do not interpret non-rejection as '
                      'equivalence. Repeated/multiple tests need an explicit error-control plan. '
