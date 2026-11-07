@@ -166,3 +166,25 @@ still uses pooled means; it is not block-adjusted or a conditional-effect
 explanation. Choosing rows after seeing these scores needs separate validation.
 
 Source: [Gretton et al., Section2.3, empirical witness](https://www.jmlr.org/papers/volume13/gretton12a/gretton12a.pdf).
+
+## Imbalanced-group scoring
+
+When the smaller group is at most one quarter of pooled rows, permutations
+use cached off-diagonal row sums and one total kernel-pair sum. For a smaller
+group A, compute within-A sum a, cross sum from row sums minus2a, and within-B
+sum from total minus a minus cross. This is the same MMD formula with different
+arithmetic. Balanced groups keep the direct reference implementation.
+
+Reports expose scoring mode, kernel-pair reads per allocation, cached row-sum
+reads per allocation and setup off-diagonal reads. In the selected2-vs-18 exact
+demo, 190 allocations each read1 kernel pair plus2 cached row sums, after380
+setup reads; direct scoring would read190 kernel pairs per allocation. The
+kernel itself still takes190 off-diagonal RBF evaluations. These are operation
+counts, not wall-time speedup, and exclude indexing, membership sets, arithmetic
+and validation. Allocation construction still takes O(N) work; memory is O(N^2).
+
+Complement subtraction can add floating cancellation. Tests compare all
+allocations on small fixtures against direct scoring, including near-constant
+kernels, exact p-values, group swapping and tied-zero results. The fixed1e-12
+conservative near-tie rule remains. No bitwise equivalence for arbitrary
+floating inputs or universally faster performance is claimed.
