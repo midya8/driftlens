@@ -99,3 +99,42 @@ processed in sequence rather than all retained in memory.
 
 Source: [Holm formula and family-wise scope](https://pingouin-stats.org/generated/pingouin.multicomp.html).
 Standard correction, original small implementation.
+
+## Prespecified within-block permutations
+
+Optional input `blocks` contains aligned reference/current string labels:
+
+```json
+{"reference": [[0], [5]], "current": [[0.1], [5.1]],
+ "blocks": {"reference": ["site-a", "site-b"], "current": ["site-a", "site-b"]}}
+```
+
+The same CLI/API accepts this schema, including exact and bandwidth-family
+modes. Every allocation preserves the observed reference/current count in
+each block. The exact space is the product of within-block combinations;
+Monte Carlo draws independently within each block. Reports show the scheme,
+per-block sizes/counts/allocation counts and informative-block count.
+A block found on only one side is frozen. If all blocks are frozen there
+is one allocation and p=1, explicitly uninformative, not evidence of equality.
+
+This tests a different conditional null from unrestricted label permutations:
+the joint data distribution must be invariant under the allowed within-block
+label reallocations. Blocks must be prespecified, not discovered by searching
+for a preferred result. It does not fix arbitrary correlation, permute whole
+clusters, bootstrap repeated users, or implement nested exchangeability.
+The pooled MMD formula is retained as the statistic, not a new unbiased
+conditional-effect estimator or a causal adjustment.
+
+Selected mixture demonstration: reference has eight zero rows/two five rows;
+current has two zero rows/eight five rows. Pooled MMD squared=0.648886 in both
+schemes. Unrestricted p=0.014; prespecified value-stratum blocks give p=1.000
+because features are identical within each stratum. This artificial example
+shows different null questions, not a claim that the blocked result is
+universally more correct, a drift cause or practical validity on real data.
+Unrestricted exact space=184756, blocked space=2025; reported p-values here
+use499 Monte Carlo draws, seed13, bandwidth1.
+
+Reference for within-group exchangeability:
+[Berkeley StatLab stratified permutation testing](https://statlab.github.io/permute/api/stratified.html).
+This implementation uses the same restriction principle with an MMD statistic,
+not their mean statistic or code.
