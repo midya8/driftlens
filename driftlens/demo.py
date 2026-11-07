@@ -1,6 +1,7 @@
 """Selected development fixtures, not a detection-power benchmark."""
 import random
 from .core import compare
+from .family import compare_family
 
 
 def run_demo():
@@ -8,7 +9,8 @@ def run_demo():
     x = [[rng.gauss(0, 1) for _ in range(4)] for _ in range(30)]
     y = [[rng.gauss(0, 1) for _ in range(4)] for _ in range(30)]
     shifted = [[v + 2 for v in row] for row in y]
-    return {'same_generator': compare({'reference': x, 'current': y}, bandwidth=2),
+    return {'shift_bandwidth_family': compare_family({'reference': x, 'current': shifted}, [1., 2., 4.]),
+            'same_generator': compare({'reference': x, 'current': y}, bandwidth=2),
             'mean_shift': compare({'reference': x, 'current': shifted}, bandwidth=2),
             'exact_tiny': compare({'reference': [[0], [.1]], 'current': [[3], [3.1]]}, exact=True),
             'fixture_scope': 'Seed13 selected development fixture: two 30x4 standard-normal '
