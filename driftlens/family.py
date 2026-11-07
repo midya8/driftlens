@@ -1,6 +1,7 @@
 """Prespecified bandwidth families with standard Holm p-value adjustment."""
 import math
 from .core import compare, _validate
+from .allocations import partition, allocation_count
 
 
 def holm_adjust(p_values):
@@ -26,13 +27,12 @@ def compare_family(payload, bandwidths, permutations=499, seed=13, alpha=.05, ex
         type(b) not in (int, float) or not math.isfinite(b) or b <= 0 for b in bandwidths
     ) or len(set(bandwidths)) != len(bandwidths):
         raise ValueError('bandwidths must be 1..20 distinct finite positive numbers')
-    if not isinstance(payload, dict) or set(payload) != {'reference', 'current'}:
-        raise ValueError('input must have exactly reference and current row matrices')
+    groups, _ = partition(payload)
     x, y = payload['reference'], payload['current']
     _validate(x, y, bandwidths[0]); size = len(x) + len(y)
     if type(exact) is not bool or type(permutations) is not int or not 1 <= permutations <= 10000:
         raise ValueError('exact must be boolean; permutations must be integer 1..10000')
-    draws = math.comb(size, len(x)) if exact else permutations
+    draws = allocation_count(groups) if exact else permutations
     if len(bandwidths) * draws * size * size > 20000000:
         raise ValueError('family exceeds 20000000 draw-by-pooled-row-squared work units')
     reports = [compare(payload, b, permutations, seed, alpha, exact) for b in bandwidths]
