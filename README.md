@@ -217,3 +217,18 @@ Standard method, original small implementation, not a new statistical test:
 - [Phipson and Smyth, permutation p-values should never be zero](https://gksmyth.github.io/pubs/PermPValuesPreprint.pdf)
 
 See [DESIGN.md](DESIGN.md). MIT licensed.
+
+
+## Exact finite kernel-family orbit (v0.2)
+
+The additive supplied-Gram mode exposes the choice inside a minimum p-value: every allowed label allocation, every exact rational MMD² score, every tied per-kernel tail rank, and the complete recalibrated global tail. Exact PSD certificates keep the supplied finite geometry inspectable. The independent browser uses BigInt rationals and the native checker independently replays the complete report. Existing floating RBF, Holm-family, blocks, witness and scoring APIs above remain unchanged.
+
+An original selected six-row/three-view control has twenty allowed allocations at alpha `1/5`: the raw minimum rejects `8/20`, recalibrated global test `4/20`, and Holm-any `0/20`. The observed best raw p is `1/10`, global p `1/5`, Holm best `3/10`. These are finite conditional-orbit fractions, not real-data error-rate or power measurements.
+
+```sh
+python -m driftlens.orbit_cli audit --input examples/orbit-selection.json --output report.json
+python -m driftlens.orbit_cli verify --input report.json
+bash examples/check_orbit_wheel.sh
+```
+
+One fixed-family global randomization test, not automatic bandwidth selection, a new test, MMDAgg, strong component-wise inference, causality, equivalence or always-valid monitoring. Fixed label-independent geometry and a justified uniform allowed-allocation null are outside assumptions; finite PSD cannot verify them. Four to ten pooled rows, one to six rational PSD matrices, at most 252 allocations. All58Python/fourNode tests include independent oracles and actual Chrome; local checks are separate from hosted/deployed release gates. See [ORBIT.md](ORBIT.md) for formulas, nine sources, exact contract, complete original controls and reproduction.
