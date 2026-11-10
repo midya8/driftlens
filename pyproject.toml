@@ -1,6 +1,6 @@
 [project]
 name = "driftlens"
-version = "0.1.0"
+version = "0.2.0"
 description = "Cached-kernel RBF MMD permutation two-sample tests"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -8,3 +8,9 @@ license = {text = "MIT"}
 [build-system]
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
+
+[project.scripts]
+driftlens-orbit = "driftlens.orbit_cli:main"
+
+[tool.setuptools.packages.find]
+include = ["driftlens*"]
