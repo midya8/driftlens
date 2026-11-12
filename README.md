@@ -6,7 +6,20 @@ pooled kernel, exact enumeration for tiny samples and seeded Monte Carlo
 permutations for larger ones. JSON CLI plus importable API. No paid APIs,
 model downloads or private datasets.
 
-## Measured development fixture
+## Choose a comparison
+
+| Input and question | Entry point | Result |
+| --- | --- | --- |
+| Embedding rows, one prespecified RBF bandwidth | `compare` / `driftlens.compare` | Floating MMD statistic and exact-enumeration or Monte Carlo p-value |
+| Embedding rows, prespecified bandwidth family | `compare --bandwidths` / `compare_family` | Per-kernel Holm adjustment |
+| Supplied rational PSD Gram matrices, fixed family | `driftlens.orbit_cli audit`, browser orbit inspector | Every allocation, exact tail rank and recalibrated global p-value |
+
+Optional blocks constrain the allowed label allocations; they do not establish
+exchangeability. Witness scores describe rows, not drift causes. The exact
+supplied-Gram mode does not make the floating RBF API rational or automatically
+choose a bandwidth.
+
+## Development fixture
 
 ```bash
 python -m driftlens demo
@@ -19,7 +32,7 @@ bash examples/demo.sh
 | Same current rows shifted +2 per coordinate | 30x4 / 30x4 | 0.634539 | 0.002 | Yes |
 | Tiny separated samples, exact test | 2x1 / 2x1 | 1.967361 | 1/3 | No |
 
-Seed13, bandwidth2 for the 30x4 arms, 499 permutations. The shifted p-value
+Seed 13, bandwidth 2 for the 30x4 arms, 499 permutations. The shifted p-value
 is at the Monte Carlo resolution floor 1/500, not evidence of a smaller
 measured p-value. The tiny test enumerates six allocations, so even visibly
 separated samples cannot reject at .05. These fixtures/settings were selected
@@ -42,7 +55,7 @@ report = compare({"reference": reference_rows, "current": current_rows},
 Required input fields are `reference` and `current`, each a numeric row matrix
 with at least two observations and the same nonzero dimension. Optional `blocks`
 selects the within-block scheme described below. `--input -`
-reads stdin. Invalid input exits2 with stderr and no partial JSON. Output
+reads stdin. Invalid input exits 2 with stderr and no partial JSON. Output
 includes statistic, p-value, decision, exceedances, resolution, sample sizes,
 permutation mode and kernel-evaluation count. Seeds use a local RNG.
 
@@ -136,7 +149,7 @@ because features are identical within each stratum. This artificial example
 shows different null questions, not a claim that the blocked result is
 universally more correct, a drift cause or practical validity on real data.
 Unrestricted exact space=184756, blocked space=2025; reported p-values here
-use499 Monte Carlo draws, seed13, bandwidth1.
+use 499 Monte Carlo draws, seed 13, bandwidth 1.
 
 Reference for within-group exchangeability:
 [Berkeley StatLab stratified permutation testing](https://statlab.github.io/permute/api/stratified.html).
@@ -150,7 +163,7 @@ python -m driftlens compare --input examples/embeddings.json --bandwidth 1 --wit
 ```
 
 API: `compare(payload, bandwidth=1., witness=3)`; family comparisons accept
-`witness` too. Zero (default) omits diagnostics; integers1..100 request that
+`witness` too. Zero (default) omits diagnostics; integers 1..100 request that
 many highest-absolute-score rows per group, capped by available rows. Output
 contains only group-local zero-based row indices and scores, not vectors.
 Ties are broken by original row index. The existing pooled kernel is reused;
@@ -175,21 +188,21 @@ Source: [Gretton et al., Section2.3, empirical witness](https://www.jmlr.org/pap
 
 When the smaller group is at most one quarter of pooled rows, permutations
 use cached off-diagonal row sums and one total kernel-pair sum. For a smaller
-group A, compute within-A sum a, cross sum from row sums minus2a, and within-B
+group A, compute within-A sum a, cross sum from row sums minus 2a, and within-B
 sum from total minus a minus cross. This is the same MMD formula with different
 arithmetic. Balanced groups keep the direct reference implementation.
 
 Reports expose scoring mode, kernel-pair reads per allocation, cached row-sum
-reads per allocation and setup off-diagonal reads. In the selected2-vs-18 exact
-demo, 190 allocations each read1 kernel pair plus2 cached row sums, after380
-setup reads; direct scoring would read190 kernel pairs per allocation. The
-kernel itself still takes190 off-diagonal RBF evaluations. These are operation
+reads per allocation and setup off-diagonal reads. In the selected 2-vs-18 exact
+demo, 190 allocations each read 1 kernel pair plus 2 cached row sums, after 380
+setup reads; direct scoring would read 190 kernel pairs per allocation. The
+kernel itself still takes 190 off-diagonal RBF evaluations. These are operation
 counts, not wall-time speedup, and exclude indexing, membership sets, arithmetic
 and validation. Allocation construction still takes O(N) work; memory is O(N^2).
 
 Complement subtraction can add floating cancellation. Tests compare all
 allocations on small fixtures against direct scoring, including near-constant
-kernels, exact p-values, group swapping and tied-zero results. The fixed1e-12
+kernels, exact p-values, group swapping and tied-zero results. The fixed 1e-12
 conservative near-tie rule remains. No bitwise equivalence for arbitrary
 floating inputs or universally faster performance is claimed.
 
@@ -206,7 +219,7 @@ there is no always-valid monitoring guarantee here.
 
 ## Verification and attribution
 
-45 tests cover closed-form kernels, direct MMD arithmetic, negative estimates,
+The original 45 tests cover closed-form kernels, direct MMD arithmetic, negative estimates,
 exact enumeration and rank superuniformity, ties, unequal groups, symmetry,
 seed/no-mutation behavior, +1 resolution, one cached kernel, extremes,
 work limits, CLI failures and pinned demo outputs. Tests run on Python
@@ -231,4 +244,16 @@ python -m driftlens.orbit_cli verify --input report.json
 bash examples/check_orbit_wheel.sh
 ```
 
-One fixed-family global randomization test, not automatic bandwidth selection, a new test, MMDAgg, strong component-wise inference, causality, equivalence or always-valid monitoring. Fixed label-independent geometry and a justified uniform allowed-allocation null are outside assumptions; finite PSD cannot verify them. Four to ten pooled rows, one to six rational PSD matrices, at most 252 allocations. All58Python/fourNode tests include independent oracles and actual Chrome; local checks are separate from hosted/deployed release gates. See [ORBIT.md](ORBIT.md) for formulas, nine sources, exact contract, complete original controls and reproduction.
+This mode is one fixed-family global randomization test. It does not select a
+bandwidth, provide strong component-wise inference, or establish causality,
+equivalence or validity under repeated monitoring. It is not MMDAgg or a new
+statistical test.
+
+Geometry must be fixed independently of labels, and the uniform null over
+allowed allocations must be justified separately. A finite PSD certificate
+cannot verify those assumptions. Inputs are limited to four to ten pooled rows,
+one to six rational PSD matrices and at most 252 allocations.
+
+The full suite has 58 Python and four Node tests, including independent oracles
+and actual Chrome checks. See [ORBIT.md](ORBIT.md) for formulas, sources, the
+input contract, selected controls and reproduction commands.
