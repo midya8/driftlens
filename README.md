@@ -254,6 +254,8 @@ allowed allocations must be justified separately. A finite PSD certificate
 cannot verify those assumptions. Inputs are limited to four to ten pooled rows,
 one to six rational PSD matrices and at most 252 allocations.
 
-The full suite has 58 Python and four Node tests, including independent oracles
+The full suite has 60 Python and four Node tests, including independent oracles
 and actual Chrome checks. See [ORBIT.md](ORBIT.md) for formulas, sources, the
 input contract, selected controls and reproduction commands.
+
+Two finite Gram-transformation tests compare 18 positive per-kernel scale/constant-offset cases and nine nonnegative diagonal changes. Complete orbit decisions and tails stay fixed; scores scale in the first case and stay fixed in the second. Changed PSD certificates are independently replayed, not assumed unchanged. These are consistency checks on supplied rational matrices, not floating-RBF accuracy, exchangeability or real-data performance evidence.
