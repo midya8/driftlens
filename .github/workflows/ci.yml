@@ -20,3 +20,24 @@ jobs:
         with:
           python-version: '3.12'
       - run: bash examples/demo.sh
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python tools/check_installed.py
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: google-chrome --version
+      - run: node --test --test-concurrency=1 tests/test_orbit_engine.cjs tests/test_orbit_browser.cjs
