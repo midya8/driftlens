@@ -40,4 +40,4 @@ jobs:
         with:
           node-version: '22'
       - run: google-chrome --version
-      - run: node --test --test-concurrency=1 tests/test_orbit_engine.cjs tests/test_orbit_browser.cjs
+      - run: node --test --test-concurrency=1 tests/test_chrome_support.cjs tests/test_orbit_engine.cjs tests/test_orbit_browser.cjs
