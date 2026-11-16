@@ -117,3 +117,18 @@ Standard methods, original small implementations, not a new statistical test.
 [the full reference](REFERENCE.md#verification-and-attribution) includes the
 original Gretton, Phipson-Smyth, Holm and stratified-permutation links. MIT
 licensed.
+
+### Browser download checks
+
+The browser test now waits for the expected export's complete byte count and no
+partial-download file before reading it. It still compares the full parsed report,
+checks the directory has exactly the expected file and sends that file through
+the native verifier. These semantic checks run once, without retrying assertions.
+The transport wait is bounded at 30 seconds. Separate helper tests reject absent,
+empty, partial, temporary and oversized downloads, then check completed files.
+Chrome runs in a test-owned process group that is stopped before profile cleanup.
+
+This addresses the transport failure observed in the PR browser job, where no
+JSON file appeared within the old five-second wait and Chrome cleanup also raced.
+Local passing checks do not establish that a hosted timing failure is fixed;
+the updated hosted browser job must pass before this batch can be merged.
